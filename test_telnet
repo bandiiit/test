@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# Define the host:port list directly in the script
+HOSTS=(
+    "google.com:80"
+    "localhost:22"
+    "invalidhost:1234"
+    "127.0.0.1:8080"
+)
+
+# Output file for results
+OUTPUT_FILE="telnet_results.txt"
+
+# Clear or create the output file
+> "$OUTPUT_FILE"
+
+echo "Starting telnet tests..."
+
+# Loop through the host:port list
+for entry in "${HOSTS[@]}"; do
+    # Split the entry into host and port
+    HOST=$(echo "$entry" | cut -d: -f1)
+    PORT=$(echo "$entry" | cut -d: -f2)
+
+    # Check if both host and port are present
+    if [[ -z "$HOST" || -z "$PORT" ]]; then
+        echo "Invalid entry: $entry" | tee -a "$OUTPUT_FILE"
+        continue
+    fi
+
+    # Test telnet connectivity
+    echo "Testing $HOST:$PORT..."
+    if echo "" | telnet "$HOST" "$PORT" 2>/dev/null | grep -q "Escape character"; then
+        echo "$HOST:$PORT - Success" | tee -a "$OUTPUT_FILE"
+    else
+        echo "$HOST:$PORT - Failed" | tee -a "$OUTPUT_FILE"
+    fi
+done
+
+echo "Telnet tests completed. Results saved to $OUTPUT_FILE."
